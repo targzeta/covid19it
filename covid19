@@ -1,0 +1,167 @@
+#!/bin/bash
+
+function _calc_data() {
+  old_tot_tamponi=0
+  while IFS=',' read data ricoverati terapia_intensiva ospedalizzati \
+           isolamento positivi nuovi_positivi dimessi deceduti \
+           tot_casi tot_tamponi dummy
+  do
+    let nuovi_tamponi=tot_tamponi-old_tot_tamponi
+    let incremento=nuovi_positivi*100/nuovi_tamponi 2>/dev/null
+
+    let perc_ricoverati=ricoverati*100/ospedalizzati 2>/dev/null
+    let perc_terapia_intensiva=terapia_intensiva*100/ospedalizzati 2>/dev/null
+
+    let perc_ospedalizzati=ospedalizzati*100/positivi 2>/dev/null
+    let perc_isolamento=isolamento*100/positivi 2>/dev/null
+
+    let perc_positivi=positivi*100/tot_casi 2>/dev/null
+    let perc_dimessi=dimessi*100/tot_casi 2>/dev/null
+    let perc_deceduti=deceduti*100/tot_casi 2>/dev/null
+    echo "$data
+          $nuovi_positivi
+          $nuovi_tamponi
+          $incremento
+          $tot_casi
+          $positivi
+          $perc_positivi
+          $dimessi
+          $perc_dimessi
+          $deceduti
+          $perc_deceduti
+          $ospedalizzati
+          $perc_ospedalizzati
+          $isolamento
+          $perc_isolamento
+          $ricoverati
+          $perc_ricoverati
+          $terapia_intensiva
+          $perc_terapia_intensiva
+         " | tr -d ' ' | paste -s -d ','
+    old_tot_tamponi=$tot_tamponi
+  done
+}
+
+# data,
+# stato,
+# ricoverati_con_sintomi,
+# terapia_intensiva,
+# totale_ospedalizzati,
+# isolamento_domiciliare,
+# totale_attualmente_positivi,
+# nuovi_attualmente_positivi,
+# dimessi_guariti,
+# deceduti,
+# totale_casi,
+# tamponi,
+# note_it,
+# note_en
+function italia() {
+  cut -d',' -f1,3- ${DATA_DIR}/${FILE_ITALIA} |\
+    sed -n "$(($FROM_DAY+1)),\$p" |\
+  _calc_data
+}
+
+# data,
+# stato,
+# codice_regione,
+# denominazione_regione,
+# lat,
+# long,
+# ricoverati_con_sintomi,
+# terapia_intensiva,
+# totale_ospedalizzati,
+# isolamento_domiciliare,
+# totale_attualmente_positivi,
+# nuovi_attualmente_positivi,
+# dimessi_guariti,
+# deceduti,
+# totale_casi,
+# tamponi,
+# note_it,
+# note_en
+function regione() {
+ local regione="$1"
+ grep ",${regione}," ${DATA_DIR}/${FILE_REGIONI} |\
+   sed -n "${FROM_DAY},\$p" |\
+   cut -d',' -f1,7- |\
+   _calc_data
+}
+
+function provincia() {
+  local provincia="$1"
+  grep ",${provincia}," ${DATA_DIR}/${FILE_PROVINCE} |\
+    sed -n "${FROM_DAY},\$p" |\
+    cut -d',' -f1,10 |\
+    (
+      i=0
+      while IFS=',' read data tot
+      do
+        echo "$data,$((tot-i)),$tot"
+        i=$tot
+      done
+    )
+}
+
+function _main() {
+  ZONE="$1"
+
+  if [[ "$ZONE" == "Italia" ]]
+  then
+    gp_file=multiple.gp
+    fun=italia
+  elif grep -q ",${ZONE}," ${DATA_DIR}/${FILE_REGIONI}
+  then
+    gp_file=multiple.gp
+    fun=regione
+  elif grep -q ",${ZONE}," ${DATA_DIR}/${FILE_PROVINCE}
+  then
+    gp_file=single.gp
+    fun=provincia
+  else
+    echo "Input non trovato: ${ZONE}"
+    return
+  fi
+
+  DAT_FILE="${TMP_DIR}/${ZONE}.dat"
+  ${fun} "${ZONE}" > "$DAT_FILE"
+
+  gp_dir=templates
+  outfile=${TMP_DIR}/current.gp
+  cat ${gp_dir}/common.gp ${gp_dir}/${gp_file} |\
+    sed "s|#ZONE#|${ZONE}|
+         s|#FILE#|${DAT_FILE}|
+        " > $outfile
+
+  if [ $gp_file = 'multiple.gp' ]
+  then
+    IFS=',' read -a values < <(tail -n1 "$DAT_FILE" | cut -d',' -f5-)
+    for i in ${!values[*]}
+    do
+      sed_command+="s|#${i}#|${values[$i]}|;"
+    done
+    sed -i "${sed_command}" $outfile
+  fi
+
+  gnuplot -font -misc-fixed-medium-r-*-*-*-100-*-*-*-*-iso10646-1 -p $outfile
+}
+
+DATA_DIR=data
+FILE_ITALIA=dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv
+FILE_REGIONI=dati-regioni/dpc-covid19-ita-regioni.csv
+FILE_PROVINCE=dati-province/dpc-covid19-ita-province.csv
+
+FROM_DAY=1
+TMP_DIR=tmp
+
+mkdir -p $TMP_DIR
+
+if [ -z "$1" ]
+then
+  _main "Italia"
+else
+  for zone in "$@"
+  do
+    _main "$zone"
+  done
+fi
