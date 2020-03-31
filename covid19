@@ -3,11 +3,11 @@
 function _calc_data() {
   old_tot_tamponi=0
   while IFS=',' read data ricoverati terapia_intensiva ospedalizzati \
-           isolamento positivi nuovi_positivi dimessi deceduti \
-           tot_casi tot_tamponi dummy
+           isolamento positivi variazione_positivi variazione_casi dimessi \
+           deceduti tot_casi tot_tamponi dummy
   do
     let nuovi_tamponi=tot_tamponi-old_tot_tamponi
-    let incremento=nuovi_positivi*100/nuovi_tamponi 2>/dev/null
+    let incremento_positivi=variazione_positivi*100/nuovi_tamponi 2>/dev/null
 
     let perc_ricoverati=ricoverati*100/ospedalizzati 2>/dev/null
     let perc_terapia_intensiva=terapia_intensiva*100/ospedalizzati 2>/dev/null
@@ -19,9 +19,9 @@ function _calc_data() {
     let perc_dimessi=dimessi*100/tot_casi 2>/dev/null
     let perc_deceduti=deceduti*100/tot_casi 2>/dev/null
     echo "$data
-          $nuovi_positivi
+          $variazione_positivi
           $nuovi_tamponi
-          $incremento
+          $incremento_positivi
           $tot_casi
           $positivi
           $perc_positivi
@@ -48,8 +48,9 @@ function _calc_data() {
 # terapia_intensiva,
 # totale_ospedalizzati,
 # isolamento_domiciliare,
-# totale_attualmente_positivi,
-# nuovi_attualmente_positivi,
+# totale_positivi,
+# variazione_totale_positivi,
+# nuovi_positivi,
 # dimessi_guariti,
 # deceduti,
 # totale_casi,
@@ -72,8 +73,9 @@ function italia() {
 # terapia_intensiva,
 # totale_ospedalizzati,
 # isolamento_domiciliare,
-# totale_attualmente_positivi,
-# nuovi_attualmente_positivi,
+# totale_positivi,
+# variazione_totale_positivi,
+# nuovi_positivi,
 # dimessi_guariti,
 # deceduti,
 # totale_casi,
