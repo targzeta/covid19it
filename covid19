@@ -7,7 +7,9 @@ function _calc_data() {
            deceduti tot_casi tot_tamponi dummy
   do
     let nuovi_tamponi=tot_tamponi-old_tot_tamponi
+
     let incremento_positivi=variazione_positivi*100/nuovi_tamponi 2>/dev/null
+    let incremento_casi=variazione_casi*100/nuovi_tamponi 2>/dev/null
 
     let perc_ricoverati=ricoverati*100/ospedalizzati 2>/dev/null
     let perc_terapia_intensiva=terapia_intensiva*100/ospedalizzati 2>/dev/null
@@ -18,10 +20,13 @@ function _calc_data() {
     let perc_positivi=positivi*100/tot_casi 2>/dev/null
     let perc_dimessi=dimessi*100/tot_casi 2>/dev/null
     let perc_deceduti=deceduti*100/tot_casi 2>/dev/null
+
     echo "$data
-          $variazione_positivi
           $nuovi_tamponi
+          $variazione_positivi
+          $variazione_casi
           $incremento_positivi
+          $incremento_casi
           $tot_casi
           $positivi
           $perc_positivi
@@ -96,11 +101,12 @@ function provincia() {
     sed -n "${FROM_DAY},\$p" |\
     cut -d',' -f1,10 |\
     (
-      i=0
-      while IFS=',' read data tot
+      old_tot_casi=0
+      while IFS=',' read data tot_casi
       do
-        echo "$data,$((tot-i)),$tot"
-        i=$tot
+        let nuovi_casi=tot_casi-old_tot_casi
+        echo "$data,$nuovi_casi,$tot_casi"
+        old_tot_casi=$tot_casi
       done
     )
 }
@@ -137,7 +143,7 @@ function _main() {
 
   if [ $gp_file = 'multiple.gp' ]
   then
-    IFS=',' read -a values < <(tail -n1 "$DAT_FILE" | cut -d',' -f5-)
+    IFS=',' read -a values < <(tail -n1 "$DAT_FILE" | cut -d',' -f7-)
     for i in ${!values[*]}
     do
       sed_command+="s|#${i}#|${values[$i]}|;"
