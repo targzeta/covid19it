@@ -143,6 +143,7 @@ function _main() {
 
   if [ $gp_file = 'multiple.gp' ]
   then
+    sed_command=''
     IFS=',' read -a values < <(tail -n1 "$DAT_FILE" | cut -d',' -f7-)
     for i in ${!values[*]}
     do
@@ -159,7 +160,7 @@ FILE_ITALIA=dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv
 FILE_REGIONI=dati-regioni/dpc-covid19-ita-regioni.csv
 FILE_PROVINCE=dati-province/dpc-covid19-ita-province.csv
 
-FROM_DAY=1
+FROM_DAY=4
 TMP_DIR=tmp
 
 mkdir -p $TMP_DIR
