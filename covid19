@@ -22,11 +22,15 @@ function _perc() {
 
 function _calc_data() {
   old_tamponi=0
+  old_dimessi=0
+  old_deceduti=0
   while IFS=',' read data ricoverati terapia_intensiva ospedalizzati \
            isolamento positivi nuovi_positivi nuovi_casi dimessi deceduti \
            casi tamponi dummy
   do
     let nuovi_tamponi=tamponi-old_tamponi
+    let nuovi_dimessi=dimessi-old_dimessi
+    let nuovi_deceduti=deceduti-old_deceduti
 
     _perc nuovi_positivi nuovi_tamponi 'incremento_positivi'
     _perc nuovi_casi nuovi_tamponi 'incremento_casi'
@@ -43,6 +47,8 @@ function _calc_data() {
 
     echo "$data
           $nuovi_tamponi
+          $nuovi_dimessi
+          $nuovi_deceduti
           $nuovi_positivi
           $nuovi_casi
           $incremento_positivi
@@ -64,6 +70,8 @@ function _calc_data() {
           $perc_terapia_intensiva
          " | tr -d ' ' | paste -s -d ','
     old_tamponi=$tamponi
+    old_dimessi=$dimessi
+    old_deceduti=$deceduti
   done
 }
 
@@ -164,7 +172,7 @@ function _main() {
   if [ $gp_file = 'multiple.gp' ]
   then
     sed_command=''
-    IFS=',' read -a values < <(tail -n1 "$DAT_FILE" | cut -d',' -f7-)
+    IFS=',' read -a values < <(tail -n1 "$DAT_FILE" | cut -d',' -f9-)
     for i in ${!values[*]}
     do
       sed_command+="s|#${i}#|${values[$i]}|;"
