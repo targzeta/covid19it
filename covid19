@@ -2,6 +2,24 @@
 #
 # by Emanuele Tomasi <targzeta@gmail.com>
 
+# Calcola la percentuale di 'partial' sul 'total'. Il risultato viene settato
+# nella variabile il cui nome è dato dal terzo argomento della funzione.
+#
+# Nota: viene passato il nome della variabile da settare per evitare il command
+# substition. Questo perché implicherebbe l'esecuzione della funzione in una
+# subshell, che rallenterebbe di molto lo script, visto la quantità di volte
+# che viene chiamata!
+function _perc() {
+  local partial=$1
+  local total=$2
+  local var_name=$3
+
+  local perc=0
+  (($total != 0)) && let perc=partial*100/total
+
+  let $var_name=perc
+}
+
 function _calc_data() {
   old_tamponi=0
   while IFS=',' read data ricoverati terapia_intensiva ospedalizzati \
@@ -10,18 +28,18 @@ function _calc_data() {
   do
     let nuovi_tamponi=tamponi-old_tamponi
 
-    let incremento_positivi=nuovi_positivi*100/nuovi_tamponi 2>/dev/null
-    let incremento_casi=nuovi_casi*100/nuovi_tamponi 2>/dev/null
+    _perc nuovi_positivi nuovi_tamponi 'incremento_positivi'
+    _perc nuovi_casi nuovi_tamponi 'incremento_casi'
 
-    let perc_ricoverati=ricoverati*100/ospedalizzati 2>/dev/null
-    let perc_terapia_intensiva=terapia_intensiva*100/ospedalizzati 2>/dev/null
+    _perc ricoverati ospedalizzati 'perc_ricoverati'
+    _perc terapia_intensiva ospedalizzati 'perc_terapia_intensiva'
 
-    let perc_ospedalizzati=ospedalizzati*100/positivi 2>/dev/null
-    let perc_isolamento=isolamento*100/positivi 2>/dev/null
+    _perc ospedalizzati positivi 'perc_ospedalizzati'
+    _perc isolamento positivi 'perc_isolamento'
 
-    let perc_positivi=positivi*100/casi 2>/dev/null
-    let perc_dimessi=dimessi*100/casi 2>/dev/null
-    let perc_deceduti=deceduti*100/casi 2>/dev/null
+    _perc positivi casi 'perc_positivi'
+    _perc dimessi casi 'perc_dimessi'
+    _perc deceduti casi 'perc_deceduti'
 
     echo "$data
           $nuovi_tamponi
