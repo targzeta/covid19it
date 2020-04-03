@@ -1,15 +1,17 @@
 #!/bin/bash
+#
+# by Emanuele Tomasi <targzeta@gmail.com>
 
 function _calc_data() {
-  old_tot_tamponi=0
+  old_tamponi=0
   while IFS=',' read data ricoverati terapia_intensiva ospedalizzati \
-           isolamento positivi variazione_positivi variazione_casi dimessi \
-           deceduti tot_casi tot_tamponi dummy
+           isolamento positivi nuovi_positivi nuovi_casi dimessi deceduti \
+           casi tamponi dummy
   do
-    let nuovi_tamponi=tot_tamponi-old_tot_tamponi
+    let nuovi_tamponi=tamponi-old_tamponi
 
-    let incremento_positivi=variazione_positivi*100/nuovi_tamponi 2>/dev/null
-    let incremento_casi=variazione_casi*100/nuovi_tamponi 2>/dev/null
+    let incremento_positivi=nuovi_positivi*100/nuovi_tamponi 2>/dev/null
+    let incremento_casi=nuovi_casi*100/nuovi_tamponi 2>/dev/null
 
     let perc_ricoverati=ricoverati*100/ospedalizzati 2>/dev/null
     let perc_terapia_intensiva=terapia_intensiva*100/ospedalizzati 2>/dev/null
@@ -17,17 +19,17 @@ function _calc_data() {
     let perc_ospedalizzati=ospedalizzati*100/positivi 2>/dev/null
     let perc_isolamento=isolamento*100/positivi 2>/dev/null
 
-    let perc_positivi=positivi*100/tot_casi 2>/dev/null
-    let perc_dimessi=dimessi*100/tot_casi 2>/dev/null
-    let perc_deceduti=deceduti*100/tot_casi 2>/dev/null
+    let perc_positivi=positivi*100/casi 2>/dev/null
+    let perc_dimessi=dimessi*100/casi 2>/dev/null
+    let perc_deceduti=deceduti*100/casi 2>/dev/null
 
     echo "$data
           $nuovi_tamponi
-          $variazione_positivi
-          $variazione_casi
+          $nuovi_positivi
+          $nuovi_casi
           $incremento_positivi
           $incremento_casi
-          $tot_casi
+          $casi
           $positivi
           $perc_positivi
           $dimessi
@@ -43,7 +45,7 @@ function _calc_data() {
           $terapia_intensiva
           $perc_terapia_intensiva
          " | tr -d ' ' | paste -s -d ','
-    old_tot_tamponi=$tot_tamponi
+    old_tamponi=$tamponi
   done
 }
 
@@ -101,12 +103,12 @@ function provincia() {
     sed -n "${FROM_DAY},\$p" |\
     cut -d',' -f1,10 |\
     (
-      old_tot_casi=0
-      while IFS=',' read data tot_casi
+      old_casi=0
+      while IFS=',' read data casi
       do
-        let nuovi_casi=tot_casi-old_tot_casi
-        echo "$data,$nuovi_casi,$tot_casi"
-        old_tot_casi=$tot_casi
+        let nuovi_casi=casi-old_casi
+        echo "$data,$nuovi_casi,$casi"
+        old_casi=$casi
       done
     )
 }
