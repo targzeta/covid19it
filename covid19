@@ -24,13 +24,27 @@ function _calc_data() {
   old_tamponi=0
   old_dimessi=0
   old_deceduti=0
+  skipped_first_line=0
   while IFS=',' read data ricoverati terapia_intensiva ospedalizzati \
            isolamento positivi nuovi_positivi nuovi_casi dimessi deceduti \
            casi tamponi dummy
   do
     let nuovi_tamponi=tamponi-old_tamponi
+    old_tamponi=$tamponi
+
     let nuovi_dimessi=dimessi-old_dimessi
+    old_dimessi=$dimessi
+
     let nuovi_deceduti=deceduti-old_deceduti
+    old_deceduti=$deceduti
+
+    # Se vanno saltati dei giorni, il primo ciclo del loop viene fatto solo per
+    # settare i valori "old_".
+    if (($FROM_DAY != 1 && $skipped_first_line == 0))
+    then
+      skipped_first_line=1
+      continue
+    fi
 
     _perc nuovi_positivi nuovi_tamponi 'incremento_positivi'
     _perc nuovi_casi nuovi_tamponi 'incremento_casi'
@@ -69,9 +83,6 @@ function _calc_data() {
           $terapia_intensiva
           $perc_terapia_intensiva
          " | tr -d ' ' | paste -s -d ','
-    old_tamponi=$tamponi
-    old_dimessi=$dimessi
-    old_deceduti=$deceduti
   done
 }
 
@@ -188,7 +199,7 @@ FILE_ITALIA=dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv
 FILE_REGIONI=dati-regioni/dpc-covid19-ita-regioni.csv
 FILE_PROVINCE=dati-province/dpc-covid19-ita-province.csv
 
-FROM_DAY=4
+FROM_DAY=5   # Verranno visualizzati solo i giorni da FROM_DAY + 1
 TMP_DIR=tmp
 
 mkdir -p $TMP_DIR
