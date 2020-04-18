@@ -5,3 +5,5 @@ set format x "%d/%m"
 set style data linespoints
 set grid xtics mxtics ytics
 set key left top
+
+set terminal X11 0 title "#ZONE#"

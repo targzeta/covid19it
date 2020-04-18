@@ -183,11 +183,15 @@ function _main() {
   DAT_FILE="${TMP_DIR}/${ZONE}.dat"
   ${fun} "${ZONE}" > "$DAT_FILE"
 
+  UPDATE_DATE=$(tail -n1 "$DAT_FILE" |\
+                  sed -E 's;^([0-9]*)-([0-9]*)-([0-9]*)T([^,]*).*;\3/\2/\1 \4;')
+
   gp_dir=templates
   outfile=${TMP_DIR}/current.gp
   cat ${gp_dir}/common.gp ${gp_dir}/${gp_file} |\
     sed "s|#ZONE#|${ZONE}|
          s|#FILE#|${DAT_FILE}|
+         s|#UPDATE#|${UPDATE_DATE}|
         " > $outfile
 
   if [ $gp_file = 'multiple.gp' ]

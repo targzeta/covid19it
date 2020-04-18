@@ -1,4 +1,4 @@
-set terminal X11 0 title "#ZONE#"
+set multiplot layout 4,2 title "#ZONE# (dati al #UPDATE#)"
 
 set label "Totale casi: #0#" at screen 1,0.95
 set label "Del totale:\nPositivi: #1# (#2#%)\nDimessi: #3# (#4#%)\nDeceduti: #5# (#6#%)" at screen 1,0.91
@@ -7,8 +7,6 @@ set label "Degli ospedalizzati:\nRicoverati: #11# (#12#%)\nTerapia intensiva: #1
 
 set label "* %(casi/tamponi)" at screen 1,0.07
 set label "** %(positivi/tamponi)" at screen 1,0.05
-
-set multiplot layout 4,2 title "#ZONE#"
 
 set origin 0,0.72
 set size 0.61,0.26
