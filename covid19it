@@ -204,6 +204,27 @@ function _main() {
   gnuplot -font -misc-fixed-medium-r-*-*-*-100-*-*-*-*-iso10646-1 -p $outfile
 }
 
+# Aggiorna i dati dal repository della protezione civile, aggiornati tutti i
+# giorni alle 18:30. I vengono scaricati:
+# - quando il file di andamento nazionale non esiste (prima volta)
+# - se siamo oltre le 18:30 di oggi e il file di andamento nazionale è
+#   antecedente le 18:30
+function _update_data() {
+  local check_file=${DATA_DIR}/${FILE_ITALIA}
+  local today_update=$(date -d 'today 18:30' '+%s')
+  local now=$(date '+%s')
+
+  [ -f $check_file ] \
+    && local last_update=$(stat -c '%Y' ${DATA_DIR}/${FILE_ITALIA})
+
+  if [ ! -f $check_file ] \
+       || [ \( $now -gt $today_update -a $last_update -lt $today_update \) ]
+  then
+      echo "Download dati!"
+      git submodule update --init --remote
+  fi
+}
+
 DATA_DIR=data
 FILE_ITALIA=dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv
 FILE_REGIONI=dati-regioni/dpc-covid19-ita-regioni.csv
@@ -213,6 +234,8 @@ FROM_DAY=$(_get_lastN_days 34) # Parte dal giorno FROM_DAY + 1
 TMP_DIR=tmp
 
 mkdir -p $TMP_DIR
+
+_update_data
 
 if [ -z "$1" ]
 then
