@@ -150,6 +150,16 @@ function provincia() {
     )
 }
 
+# Calcola e ritorna il giorno da cui partire per mostrare esattamente il numero
+# di giorni passati in input. Da usare per settare la variabile FROM_DAY.
+function _get_lastN_days() {
+  local window=$1
+  local today=$(date '+%j')
+  local first_day=$(date -d '2020-02-20' '+%-j')
+
+  echo $(($today - (($today - $first_day) + $window)))
+ }
+
 function _main() {
   ZONE="$1"
 
@@ -199,7 +209,7 @@ FILE_ITALIA=dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv
 FILE_REGIONI=dati-regioni/dpc-covid19-ita-regioni.csv
 FILE_PROVINCE=dati-province/dpc-covid19-ita-province.csv
 
-FROM_DAY=5   # Verranno visualizzati solo i giorni da FROM_DAY + 1
+FROM_DAY=$(_get_lastN_days 34) # Parte dal giorno FROM_DAY + 1
 TMP_DIR=tmp
 
 mkdir -p $TMP_DIR
