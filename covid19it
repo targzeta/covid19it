@@ -160,6 +160,25 @@ function _get_lastN_days() {
   echo $(($today - (($today - $first_day) + $window)))
  }
 
+function _check_requirements() {
+
+  error=0
+  for req in cut sed grep gnuplot stat git mkdir
+  do
+    if ! type $req >& /dev/null
+    then
+      error=1
+      echo "$req: comando mancante!"
+    fi
+  done
+
+  if (( $error == 1 ))
+  then
+    echo -e "\nUno o più comandi mancanti. Non posso procedere :-(!"
+    exit 1
+  fi
+}
+
 function _main() {
   ZONE="$1"
 
@@ -239,6 +258,7 @@ TMP_DIR=tmp
 
 mkdir -p $TMP_DIR
 
+_check_requirements
 _update_data
 
 if [ -z "$1" ]
