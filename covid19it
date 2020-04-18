@@ -162,6 +162,27 @@ function provincia() {
     )
 }
 
+# Aggiorna i dati dal repository della protezione civile, aggiornati tutti i
+# giorni alle 18:30. I vengono scaricati:
+# - quando il file di andamento nazionale non esiste (prima volta)
+# - se siamo oltre le 18:30 di oggi e il file di andamento nazionale è
+#   antecedente le 18:30
+function _update_data() {
+  local check_file=${DATA_DIR}/${FILE_ITALIA}
+  local today_update=$(date -d 'today 18:30' '+%s')
+  local now=$(date '+%s')
+
+  [ -f $check_file ] \
+    && local last_update=$(stat -c '%Y' ${DATA_DIR}/${FILE_ITALIA})
+
+  if [ ! -f $check_file ] \
+       || [ \( $now -gt $today_update -a $last_update -lt $today_update \) ]
+  then
+      echo "Download dati!"
+      git submodule update --init --remote
+  fi
+}
+
 # Calcola e ritorna il giorno da cui partire per mostrare esattamente il numero
 # di giorni passati in input. Da usare per settare la variabile FROM_DAY.
 function _get_lastN_days() {
@@ -237,27 +258,6 @@ function _main() {
   fi
 
   gnuplot -font -misc-fixed-medium-r-*-*-*-100-*-*-*-*-iso10646-1 -p $outfile
-}
-
-# Aggiorna i dati dal repository della protezione civile, aggiornati tutti i
-# giorni alle 18:30. I vengono scaricati:
-# - quando il file di andamento nazionale non esiste (prima volta)
-# - se siamo oltre le 18:30 di oggi e il file di andamento nazionale è
-#   antecedente le 18:30
-function _update_data() {
-  local check_file=${DATA_DIR}/${FILE_ITALIA}
-  local today_update=$(date -d 'today 18:30' '+%s')
-  local now=$(date '+%s')
-
-  [ -f $check_file ] \
-    && local last_update=$(stat -c '%Y' ${DATA_DIR}/${FILE_ITALIA})
-
-  if [ ! -f $check_file ] \
-       || [ \( $now -gt $today_update -a $last_update -lt $today_update \) ]
-  then
-      echo "Download dati!"
-      git submodule update --init --remote
-  fi
 }
 
 DATA_DIR=data
