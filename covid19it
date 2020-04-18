@@ -134,6 +134,18 @@ function regione() {
    _calc_data
 }
 
+# data,
+# stato,
+# codice_regione,
+# denominazione_regione,
+# codice_provincia,
+# denominazione_provincia,
+# sigla_provincia,
+# lat,
+# long,
+# totale_casi,
+# note_it,
+# note_en
 function provincia() {
   local provincia="$1"
   grep ",${provincia}," ${DATA_DIR}/${FILE_PROVINCE} |\
