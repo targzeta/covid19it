@@ -176,7 +176,8 @@ function _update_data() {
     && local last_update=$(stat -c '%Y' ${DATA_DIR}/${FILE_ITALIA})
 
   if [ ! -f $check_file ] \
-       || [ \( $now -gt $today_update -a $last_update -lt $today_update \) ]
+       || [ \( $now -gt $today_update -a $last_update -lt $today_update \) ] \
+       || (( $now - $last_update > 24*60*60 ))
   then
       echo "Download dati!"
       git submodule update --init --remote
