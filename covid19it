@@ -27,7 +27,7 @@ function _calc_data() {
   skipped_first_line=0
   while IFS=',' read data ricoverati terapia_intensiva ospedalizzati \
            isolamento positivi nuovi_positivi nuovi_casi dimessi deceduti \
-           casi tamponi dummy
+           casi tamponi testati dummy
   do
     let nuovi_tamponi=tamponi-old_tamponi
     old_tamponi=$tamponi
@@ -99,11 +99,13 @@ function _calc_data() {
 # deceduti,
 # totale_casi,
 # tamponi,
+# casi_testati,
 # note_it,
 # note_en
 function italia() {
-  cut -d',' -f1,3- ${DATA_DIR}/${FILE_ITALIA} |\
+  grep -v '^[[:space:]]*$' ${DATA_DIR}/${FILE_ITALIA} |\
     sed -n "$(($FROM_DAY+1)),\$p" |\
+    cut -d',' -f1,3- |\
   _calc_data
 }
 
@@ -124,6 +126,7 @@ function italia() {
 # deceduti,
 # totale_casi,
 # tamponi,
+# casi_testati,
 # note_it,
 # note_en
 function regione() {
